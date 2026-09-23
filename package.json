@@ -1,0 +1,14 @@
+{
+  "name": "render-mongodb-demo",
+  "version": "1.0.0",
+  "description": "Demo MongoDB + Render",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.0",
+    "express": "^5.0.0",
+    "mongodb": "^6.0.0"
+  }
+}

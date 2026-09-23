@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>MongoDB + Render</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .contenedor {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        .usuario {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        .eliminar {
+            background: #d33;
+            color: white;
+            border: none;
+        }
+
+        #mensaje {
+            margin: 15px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <h1>MongoDB + Render</h1>
+
+    <p>
+        Aplicación de prueba usando Node.js,
+        Express y MongoDB.
+    </p>
+
+    <h2>Registrar usuario</h2>
+
+    <form id="formUsuario">
+
+        <input
+            id="nombre"
+            type="text"
+            placeholder="Nombre"
+            required
+        >
+
+        <input
+            id="email"
+            type="email"
+            placeholder="Correo electrónico"
+            required
+        >
+
+        <button type="submit">
+            Guardar en MongoDB
+        </button>
+
+    </form>
+
+    <div id="mensaje"></div>
+
+    <h2>Usuarios registrados</h2>
+
+    <div id="usuarios">
+        Cargando...
+    </div>
+
+</div>
+
+<script>
+
+const form = document.getElementById("formUsuario");
+const lista = document.getElementById("usuarios");
+const mensaje = document.getElementById("mensaje");
+
+async function cargarUsuarios() {
+
+    try {
+
+        const respuesta = await fetch("/api/usuarios");
+        const usuarios = await respuesta.json();
+
+        lista.innerHTML = "";
+
+        if (usuarios.length === 0) {
+            lista.innerHTML = "<p>No hay usuarios registrados.</p>";
+            return;
+        }
+
+        usuarios.forEach(usuario => {
+
+            const div = document.createElement("div");
+            div.className = "usuario";
+
+            const datos = document.createElement("span");
+            datos.textContent =
+                `${usuario.nombre} - ${usuario.email}`;
+
+            const boton = document.createElement("button");
+            boton.textContent = "Eliminar";
+            boton.className = "eliminar";
+
+            boton.addEventListener("click", () => {
+                eliminarUsuario(usuario._id);
+            });
+
+            div.appendChild(datos);
+            div.appendChild(boton);
+
+            lista.appendChild(div);
+        });
+
+    } catch (error) {
+
+        lista.textContent =
+            "Error cargando los usuarios.";
+
+    }
+}
+
+
+form.addEventListener("submit", async (event) => {
+
+    event.preventDefault();
+
+    const nombre =
+        document.getElementById("nombre").value;
+
+    const email =
+        document.getElementById("email").value;
+
+    try {
+
+        const respuesta = await fetch("/api/usuarios", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                nombre,
+                email
+            })
+
+        });
+
+        const resultado = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(
+                resultado.error || "Error registrando usuario"
+            );
+        }
+
+        mensaje.textContent =
+            "Usuario registrado correctamente.";
+
+        form.reset();
+
+        cargarUsuarios();
+
+    } catch (error) {
+
+        mensaje.textContent = error.message;
+
+    }
+
+});
+
+
+async function eliminarUsuario(id) {
+
+    try {
+
+        const respuesta =
+            await fetch(`/api/usuarios/${id}`, {
+                method: "DELETE"
+            });
+
+        if (!respuesta.ok) {
+            throw new Error("No se pudo eliminar");
+        }
+
+        cargarUsuarios();
+
+    } catch (error) {
+
+        mensaje.textContent =
+            "Error eliminando usuario.";
+
+    }
+
+}
+
+
+cargarUsuarios();
+
+</script>
+
+</body>
+</html>
